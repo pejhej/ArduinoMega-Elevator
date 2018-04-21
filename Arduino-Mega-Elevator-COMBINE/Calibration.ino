@@ -9,7 +9,10 @@
 
 void calibration() {
 
+
   //states for moving
+  /**** TODO: Make an enum ***/
+
   const int FIND_BOTTOM = 0;
   const int FIND_TOP = 1;
   const int FIND_FLAGS = 2;
@@ -19,7 +22,6 @@ void calibration() {
   int state = FIND_BOTTOM;
 
   //Turn off the brakes
-
 
   while (!moving)
   {
@@ -98,9 +100,9 @@ void calibration() {
 
 bool calibrationWithSafety()
 {
+  
   bool calibrationFinished = true;
-
-
+  
   //states for moving
   const int FIND_BOTTOM = 0;
   const int FIND_TOP = 1;
@@ -252,23 +254,23 @@ bool calibrationWithSafety()
           //Save the found variables
           maxPos.zLeft = currentPos.zLeft;
           maxPos.zRight = currentPos.zRight;
-          
+
           state = FIND_FLAGS;
 
           if (debug == 1)
-            {
-              Serial.println("reached top");
-            }
+          {
+            Serial.println("reached top");
+          }
 
         }
         break;
 
       //Go down and find the trays
       case FIND_FLAGS:
-      if (debug == 1)
-         {
+        if (debug == 1)
+        {
           Serial.println("Finding flag");
-         }
+        }
         //IF safetybarrier is activated, check the barrier counter
         if (digitalRead(LEFT_BOTTOM_SWITCH) && digitalRead(RIGHT_BOTTOM_SWITCH))
         {
@@ -367,8 +369,6 @@ bool calibrationWithSafety()
         break;
     }
   }
-
-
   return calibrationFinished;
 }
 

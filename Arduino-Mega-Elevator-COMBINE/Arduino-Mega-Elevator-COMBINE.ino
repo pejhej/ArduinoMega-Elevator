@@ -1,5 +1,16 @@
 #include <Stepper.h>
 #include <Wire.h>
+
+
+//debugging bools
+bool cal = false;
+// Debug over 1 for normal debug,
+// Debug = 1, calibration debug
+// Debug = 2, move case debug
+// Debug = 3 for steps
+int debug = true;
+
+
 /******************** STEPPER VARIABLES ***********************/
 #define MOTOR_BREAK 7
 #define PUMP 6
@@ -33,8 +44,8 @@
 /************** I2C Communication *************/
 #define ANSWERSIZE 3
 #define ADDRESS 0x03
-
-
+/************** Serial Communication *************/
+#define DEVICE_NAME "dev2"
 
 
 //Variable to hold steps pr mm
@@ -109,18 +120,13 @@ boolean brake = false;
 
 //Set up the motors
 Stepper motor_left(STEP_PER_REVOLUTION, LEFT_MOTOR_STEP, LEFT_MOTOR_DIR);
+
 Stepper motor_right(STEP_PER_REVOLUTION, RIGHT_MOTOR_STEP, RIGHT_MOTOR_DIR);
 
 
 
 
-//debugging bools
-bool cal = false;
-// Debug over 1 for normal debug,
-// Debug = 1, calibration debug
-// Debug = 2, move case debug
-// Debug = 3 for steps
-int debug = 0;
+
 
 
 
@@ -188,8 +194,8 @@ enum moveState movingState;
 //enum command checkCommand;
 
 
-
-
+//ENUM For acknowledgement  og negative-acknowledgement
+enum acknowlagement {ACK = 1, NACK = 0};
 
 
 int lastPrintStep;
@@ -202,9 +208,15 @@ int lastPrintStep;
 //-----------------------------SETUP---------------------------------------------------------------------
 
 void setup() {
+
+  // Start Serial communication
+  Serial.begin(19200);
+  Serial2.begin(9600);
+  while (!Serial2) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
   if (debug > 0)
   {
-    Serial.begin(9600);
     currentPos.zLeft = 0;
     currentPos.zRight = 0;
   }
@@ -230,14 +242,7 @@ void setup() {
   //Calculate step per mm
   stepPerMM = stepsToMMCalculation(STEP_PER_REVOLUTION, DRIVER_MICROSTEPS, BELT_PRESENT_PITCH, PULLEY_TOOTH);
 
-
-
-
-  //********************************************** I2C Communication *********************************************
-  Wire.begin(ADDRESS);                // join i2c bus with address
-  //Add the interrupts
-  Wire.onReceive(receiveEvent); // register event
-  Wire.onRequest(requestEvent);
+  mainCommand = idle;
 
 }
 
@@ -247,53 +252,37 @@ void setup() {
 //--------------------------------------------------------------------------------------------------
 void loop()
 {
-  //turnOffBrake();
-
-  // printSafetyDigitalRead();
-  //printSteps();
-
   if (cal)
   {
+    //
     turnOffBrake();
-    //calibrationWithSafety();
-    //turnOnBrake();
-    //disableMotors();
-    //mainCommand = doCalibrate;
-
-    
     cal = false;
   }
-
-
-  // printSteps();
-
-//  printSensors();
-
-
-
-  // Serial.println("Checking");
-  //Check safety battiers
-
-
-
-
-
-
-
-
-
 
 
   //Switch command for the
   //--------------------------------------------------------------------------------------------------
   switch (mainCommand)
   {
-    
+    //--------------------------------------------------------------------------------------------------
+    //The arduino has nothing to do, and is therefore in idle
+    case idle:
+      Serial.println(F("Main: Idle"));
+      inState = readyToRecieve;
+      turnOnBrake();
+      receiveSerialEvent();
+      if (debug) {
+        delay(1000);
+      }
+      break;
+
+
     case moveRobot:
+      Serial.println(F("Main: move robot"));
       //Set state to busy
       inState = busy;
       turnOffBrake();
-      
+
       //If endstop is reached check if it can continue to move
       //Check which endstop is reached, and which direction it can move
       //If it cant move in the preferred direction(set to by move)
@@ -423,9 +412,9 @@ void loop()
             else
             {
               if (debug == 2)
-               {
+              {
                 Serial.println("dir unsafe");
-               }
+              }
 
               movingState = moveNotPossible;
             }
@@ -440,29 +429,32 @@ void loop()
         //Not possible to move - SafetyMoving has exceed move range or try to move in same direction as the triggered end stop
         case moveNotPossible:
           if (debug == 2)
-           {
+          {
             Serial.println("MoveNotPossible");
-           }
-           mainCommand = failure;
+          }
+          mainCommand = failure;
           break;
 
         //The position has been reached
         case doneMoving:
           if (debug == 2)
-           {
+          {
             Serial.println("doneMoving");
-           }
-           turnOnBrake();
-           mainCommand = idle;
+          }
+          turnOnBrake();
+          mainCommand = idle;
           break;
 
         default:
           break;
       }
       break;
+
+
     //--------------------------------------------------------------------------------------------------
     //Calibrate the robot
     case doCalibrate:
+      Serial.println(F("Main: Do calibrate"));
       //Set state
       inState = busy;
       //Turn off brake
@@ -478,59 +470,58 @@ void loop()
 
 
     //--------------------------------------------------------------------------------------------------
-    case turnOnLight:
-      //Set state to busy
-      inState = busy;
-      //Turn on light
-
-      break;
-
-
-
-
-    //--------------------------------------------------------------------------------------------------
     case changeVelocity:
+      Serial.println(F("Main: change velocity"));
       inState = busy;
+
+      Serial.println(F("Fucntion not made"));
+      /**** TODO: Make changeVelocity if needed. ****/
+
+      mainCommand = idle;
       break;
 
     //--------------------------------------------------------------------------------------------------
 
     case changeAcceleration:
+      Serial.println(F("Main: Change Acc"));
       inState = busy;
-      //Serial.println("Suction");
-      break;
-
-
-    //--------------------------------------------------------------------------------------------------
-    //The arduino has nothing to do, and is therefore in idle
-    case idle:
-      inState = readyToRecieve;
-      turnOnBrake();
-      Serial.println("Idle");
+      Serial.println(F("Fucntion not made"));
+      /**** TODO: Make changeAcceleration if needed. ****/
+      mainCommand = idle;
       break;
 
 
     //--------------------------------------------------------------------------------------------------
     //The arduino has recieved an STOP command
     case stopRobot:
+      Serial.println(F("Main: Stopped"));
       inState = stopped;
-      Serial.println("STOPPED");
+      /**** TODO: Make changeAcceleration if needed. ****/
+      Serial.println(F("Fucntion not made"));
+      mainCommand = idle;
       break;
 
 
     //--------------------------------------------------------------------------------------------------
     //The is in failure mode has recieved an STOP command
     case failure:
+      Serial.println(F("Failure"));
       inState = checkFailure();
-      disableMotors();
       turnOnBrake();
+      /**** TODO: Make delay function.
+        STOP shold be handled in an stop function.
+        This function turns on brake and disables
+        the motors afte T given time****/
+      Serial.println("DELAY IS USED FOR HOLDING THE MOTOR UNTIL THE BRAKE IS SAFLY TURND ON");
+      delay(100);
+      disableMotors();
       Serial.println("Failure");
       break;
 
     //--------------------------------------------------------------------------------------------------
 
     default:
-    if(debug == 3)
+      if (debug == 3)
       {
         Serial.println("Command not recognised");
       }
@@ -544,7 +535,7 @@ void loop()
 
 
 
-  
+
 }
 
 
