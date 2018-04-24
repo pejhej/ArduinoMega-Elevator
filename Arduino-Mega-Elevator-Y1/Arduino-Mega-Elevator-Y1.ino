@@ -37,6 +37,10 @@ int debug = true;
 #define PULLEY_TOOTH 20
 
 
+/******** STOP INTERRUPT PIN ***********/
+#define STOP_INTERRUPT_PIN 2
+
+
 //Safety IR
 #define TOP_IR_RELAY 18
 #define BOTTOM_IR_RELAY 19
@@ -47,11 +51,14 @@ int debug = true;
 /************** Serial Communication *************/
 #define DEVICE_NAME "dev2"
 
+/************** The maximun number of trays posible for this system *************/
+#define MAX_NR_OF_TRAYS 10
+
 
 //Variable to hold steps pr mm
 float stepPerMM = 0;
-//Step speed
-int stepSpeed = 100;
+//Default stepper speed
+int stepSpeed = 120;
 //Save traveled distance here
 int travelledDistance;
 
@@ -88,7 +95,7 @@ typedef struct Tray
 typedef struct TrayRegister
 {
   int nrOfTrays;
-  Tray trayList[10];
+  Tray trayList[MAX_NR_OF_TRAYS];
 } TrayRegister;
 
 //Create tray register
@@ -152,12 +159,15 @@ enum state {
 */
 enum command {
   moveRobot = 0x05,
-  doSuction = 0x06,
+  // doSuction = 0x06,
   stopRobot = 0x07,
   doCalibrate = 0x10,
-  turnOnLight = 0x11,
   changeVelocity = 0x20,
   changeAcceleration = 0x21,
+  vacuumOn = 0x24,
+  vacuumOff = 0x25,
+  retrieveState = 0x30,
+  calibParam = 0x31,
 
   //Main loop states
   idle = 0x01,
@@ -165,12 +175,6 @@ enum command {
   failure = 0x03
 };
 
-//ENUM for use in requestEvent,
-enum requestCommand {
-
-  retrieveState = 0x30,
-  calibParam = 0x31,
-};
 
 /**
    The enum for deciding the moving conditions
@@ -185,17 +189,17 @@ enum moveState
 };
 
 
+//ENUM For acknowledgement  og negative-acknowledgement
+enum acknowlagement {ACK = 1, NACK = 0};
+
+
 //Create enums
 enum state inState;             //To keep track of which STATE the arduino currently is in. Busy when doing stuff, ready/idle when not. EMC, encoder failure, ETC...
 enum command mainCommand;       //Switch case command for the main loop
 enum command recieveCommand;    //Switch case command for the RECIEVE command, reading storing values to be done later.
-enum requestCommand reqCommand;
 enum moveState movingState;
 //enum command checkCommand;
 
-
-//ENUM For acknowledgement  og negative-acknowledgement
-enum acknowlagement {ACK = 1, NACK = 0};
 
 
 int lastPrintStep;
@@ -216,6 +220,18 @@ void setup() {
   {
     currentPos.zLeft = 0;
     currentPos.zRight = 0;
+    maxPos.zRight = 2000;
+    maxPos.zLeft = 2000;
+    currentPos.zLeft = 200;
+    currentPos.zRight = 200;
+    createTrayOnPos();
+    currentPos.zLeft = 400;
+    currentPos.zRight = 400;
+    createTrayOnPos();
+    currentPos.zLeft = 700;
+    currentPos.zRight = 700;
+    createTrayOnPos();
+    Serial.println(trayReg.nrOfTrays);
   }
 
   //Set the pin modes
@@ -228,12 +244,17 @@ void setup() {
   pinMode(TOP_IR_RELAY, INPUT_PULLUP);
   pinMode(BOTTOM_IR_RELAY, INPUT_PULLUP);
 
+
+  /******** INTERRUPT PIN ***********/
+  pinMode(STOP_INTERRUPT_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(STOP_INTERRUPT_PIN), stopMotors, FALLING);
+
   //Enable motors
   enableMotors();
   turnOnBrake();
 
   //Setup the tray register
-  trayReg.nrOfTrays = 0;
+  //trayReg.nrOfTrays = 0;
 
 
   //Calculate step per mm
@@ -256,11 +277,12 @@ void loop()
     cal = false;
   }
 
-
+  receiveSerialEvent();
   //Switch command for the
   //--------------------------------------------------------------------------------------------------
   switch (mainCommand)
   {
+
     //--------------------------------------------------------------------------------------------------
     //The arduino has nothing to do, and is therefore in idle
     case idle:
@@ -269,7 +291,7 @@ void loop()
       }
       inState = readyToRecieve;
       turnOnBrake();
-      receiveSerialEvent();
+
       if (debug) {
         delay(1000);
       }
@@ -472,6 +494,29 @@ void loop()
       break;
 
 
+    //-------------------------------------------------------------------------
+    // Turn On vacuum.
+    case vacuumOn:
+      if (debug) {
+        Serial.println("Main: DO SUCTION NO*****");
+      }
+      sendInt(ACK); // Send an Acknowledge
+      turnVacuumOn();
+      mainCommand = idle;
+      break;
+
+    //-------------------------------------------------------------------------
+    // Turn Off vacuum.
+    case vacuumOff:
+      if (debug) {
+        Serial.println("Main: DO SUCTION OFF *****");
+      }
+      sendInt(ACK); // Send an Acknowledge
+      turnVacuumOff();
+      mainCommand = idle;
+      break;
+
+
     //--------------------------------------------------------------------------------------------------
     case changeVelocity:
       if (debug) {
@@ -507,10 +552,9 @@ void loop()
         Serial.println(F("Main: Stopped"));
         Serial.println(F("Fucntion not made"));
       }
+      turnOffBrake();
       inState = stopped;
-      /**** TODO: Make changeAcceleration if needed. ****/
 
-      mainCommand = idle;
       break;
 
 
@@ -548,9 +592,6 @@ void loop()
 
 
   //--------------------------------------------------------------------------------------------------
-
-
-
 
 }
 

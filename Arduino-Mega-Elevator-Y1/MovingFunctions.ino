@@ -17,8 +17,8 @@ boolean moveStep(Pos newZ) {
   if (deltaZ != 0)
   {
 
-    moveLeftMotor(dirZLeft(newZ.zLeft), stepSpeed);
-    moveRightMotor(dirZRight(newZ.zRight), stepSpeed);
+    moveLeftMotor(dirZLeft(newZ.zLeft));
+    moveRightMotor(dirZRight(newZ.zRight));
     //Increment currentpos
     //   currentPos.zLeft = (currentPos.zLeft + dirZLeft(newZ.zLeft));
     //  currentPos.zRight = (currentPos.zRight + dirZRight(newZ.zRight));
@@ -41,7 +41,7 @@ boolean moveStep(Pos newZ) {
 
 
 //Move the left motor
-void  moveLeftMotor(int dir, int stepspeed)
+void  moveLeftMotor(int dir)
 {
   motor_left.step(dir);
   motor_left.setSpeed(stepSpeed);
@@ -49,13 +49,12 @@ void  moveLeftMotor(int dir, int stepspeed)
 }
 
 //Move the right motor
-void  moveRightMotor(int dir, int stepspeed)
+void  moveRightMotor(int dir)
 {
   motor_right.step(dir);
   motor_right.setSpeed(stepSpeed);
   increaseRightStep(dir);
 }
-
 
 /**
    Increase the step in left direction with one

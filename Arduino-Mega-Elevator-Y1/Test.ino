@@ -107,12 +107,12 @@ void moveStep() {
         if (digitalRead(LEFT_BOTTOM_SWITCH))
         {
 
-          moveLeftMotor(LEFT_DIR_DOWN, stepSpeed);
+          moveLeftMotor(LEFT_DIR_DOWN);
         }
 
         if (digitalRead(RIGHT_BOTTOM_SWITCH))
         {
-          moveRightMotor(RIGHT_DIR_DOWN, stepSpeed);
+          moveRightMotor(RIGHT_DIR_DOWN);
         }
 
         if (!digitalRead(LEFT_BOTTOM_SWITCH) && !digitalRead(RIGHT_BOTTOM_SWITCH))

@@ -27,8 +27,8 @@
   }
 */
 /*
- * Add a new tray to the register
- */
+   Add a new tray to the register
+*/
 void addToTrayReg(Tray addTray)
 {
   if (trayReg.nrOfTrays == 0)
@@ -42,13 +42,13 @@ void addToTrayReg(Tray addTray)
     int newTotal = (trayReg.nrOfTrays + 1);
     trayReg.nrOfTrays = (trayReg.nrOfTrays + 1);
     addTray.trayNumber = newTotal;
-    trayReg.trayList[newTotal-1] = addTray;
+    trayReg.trayList[newTotal - 1] = addTray;
   }
 }
 
 /**
- * Create a tray and add it to the register 
- */
+   Create a tray and add it to the register
+*/
 void createTrayOnPos()
 {
   Tray newTray;

@@ -35,12 +35,12 @@ void calibration() {
         if (digitalRead(LEFT_BOTTOM_SWITCH))
         {
 
-          moveLeftMotor(LEFT_DIR_DOWN, stepSpeed);
+          moveLeftMotor(LEFT_DIR_DOWN);
         }
 
         if (digitalRead(RIGHT_BOTTOM_SWITCH))
         {
-          moveRightMotor(RIGHT_DIR_DOWN, stepSpeed);
+          moveRightMotor(RIGHT_DIR_DOWN);
         }
 
         if (!digitalRead(LEFT_BOTTOM_SWITCH) && !digitalRead(RIGHT_BOTTOM_SWITCH))
@@ -138,7 +138,7 @@ bool calibrationWithSafety()
           {
             if (barrierCounterLeft < flagDetectionSteps && !counterExceeded())
             {
-              moveLeftMotor(LEFT_DIR_DOWN, stepSpeed);
+              moveLeftMotor(LEFT_DIR_DOWN);
               ++barrierCounterLeft;
             }
             else
@@ -152,7 +152,7 @@ bool calibrationWithSafety()
             if (debug == 1)
               Serial.println("Moving LEFT with safety OK");
 
-            moveLeftMotor(LEFT_DIR_DOWN, stepSpeed);
+            moveLeftMotor(LEFT_DIR_DOWN);
             barrierCounterLeft = 0;
           }
         }
@@ -165,7 +165,7 @@ bool calibrationWithSafety()
             //Check the safety counters
             if ((barrierCounterRight < flagDetectionSteps) && !counterExceeded())
             {
-              moveRightMotor(RIGHT_DIR_DOWN, stepSpeed);
+              moveRightMotor(RIGHT_DIR_DOWN);
               ++barrierCounterRight;
             }
             else
@@ -179,7 +179,7 @@ bool calibrationWithSafety()
             if (debug == 1)
               Serial.println("Moving RIGHT with safety OK");
 
-            moveRightMotor(RIGHT_DIR_DOWN, stepSpeed);
+            moveRightMotor(RIGHT_DIR_DOWN);
             barrierCounterRight = 0;
           }
         }
@@ -205,7 +205,7 @@ bool calibrationWithSafety()
           {
             if ((barrierCounterLeft < flagDetectionSteps) && !counterExceeded())
             {
-              moveLeftMotor(LEFT_DIR_UP, stepSpeed);
+              moveLeftMotor(LEFT_DIR_UP);
               ++barrierCounterLeft;
             }
             else
@@ -216,7 +216,7 @@ bool calibrationWithSafety()
           //No problem moving, move normally
           else
           {
-            moveLeftMotor(LEFT_DIR_UP, stepSpeed);
+            moveLeftMotor(LEFT_DIR_UP);
             barrierCounterLeft = 0;
           }
 
@@ -230,7 +230,7 @@ bool calibrationWithSafety()
           {
             if ((barrierCounterRight < flagDetectionSteps) && !counterExceeded())
             {
-              moveRightMotor(RIGHT_DIR_UP, stepSpeed);
+              moveRightMotor(RIGHT_DIR_UP);
               ++barrierCounterRight;
             }
             else
@@ -241,7 +241,7 @@ bool calibrationWithSafety()
           //No problem moving
           else
           {
-            moveRightMotor(RIGHT_DIR_UP, stepSpeed);
+            moveRightMotor(RIGHT_DIR_UP);
             barrierCounterRight = 0;
           }
         }
@@ -293,8 +293,8 @@ bool calibrationWithSafety()
               //Check if counter is not exceeded, then move the motors and update counters
               if (!counterExceeded())
               {
-                moveLeftMotor(LEFT_DIR_DOWN, stepSpeed);
-                moveRightMotor(RIGHT_DIR_DOWN, stepSpeed);
+                moveLeftMotor(LEFT_DIR_DOWN);
+                moveRightMotor(RIGHT_DIR_DOWN);
                 updateCntBottomBarrier();
                 updateCntTopBarrier();
 
@@ -322,8 +322,8 @@ bool calibrationWithSafety()
               //Check if counter is not exceeded, then move the motors and update counters
               if (!counterExceeded())
               {
-                moveLeftMotor(LEFT_DIR_DOWN, stepSpeed);
-                moveRightMotor(RIGHT_DIR_DOWN, stepSpeed);
+                moveLeftMotor(LEFT_DIR_DOWN);
+                moveRightMotor(RIGHT_DIR_DOWN);
                 updateCntBottomBarrier();
                 updateCntTopBarrier();
               }
@@ -341,9 +341,9 @@ bool calibrationWithSafety()
             if (debug == 1)
               Serial.println("Moving normal");
 
-            moveRightMotor(RIGHT_DIR_DOWN, stepSpeed);
+            moveRightMotor(RIGHT_DIR_DOWN);
             barrierCounterRight = 0;
-            moveLeftMotor(LEFT_DIR_DOWN, stepSpeed);
+            moveLeftMotor(LEFT_DIR_DOWN);
             barrierCounterLeft = 0;
 
             //Update the counter barrier

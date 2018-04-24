@@ -66,6 +66,14 @@
 /**
    Checks the limit switches and sets the appropriate bools
 */
+
+
+
+void stopMotors() {
+  mainCommand = stopRobot;
+}
+
+
 bool limitTrigged()
 {
   bool limitIsTrigged = false;

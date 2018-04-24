@@ -18,9 +18,12 @@ void receiveSerialEvent() {
       }
 
       //Byte[] to store incomming bytes on
-      //TODO: Make incByte dynamic from how much is incomming
-      int defaultBytes = 4;
-      byte incBytes[defaultBytes];
+
+      // Response array made for returning calib param
+      // The calib param contains maxPos.zLeft and maxPos.zRigth + the pos of each tray found. (Left and right)
+      // Therefor we need an array of 2(maxPos) + 2*(numberOftrays)
+      int arrayLength = (2 + (trayReg.nrOfTrays * 2));
+      int response[arrayLength];
       int cnt = 0;
 
       //--------------------------------------------------------------------------------------------------
@@ -70,25 +73,53 @@ void receiveSerialEvent() {
           break;
         //-----------------
 
-
         //-------------------------------------------------------------------------
-        //Set the command for calibrating the robot.
-        case changeVelocity:
+        // Turn On vacuum.
+        case vacuumOn:
           if (debug) {
-            Serial.println("*****CHANGE VELOCITY RECOGNIZED*****");
+            Serial.println("*****DO SUCTION NO*****");
           }
           sendInt(ACK); // Send an Acknowledge
           mainCommand = recieveCommand;
           break;
-        //-----------------
+
+        //-------------------------------------------------------------------------
+        // Turn Off vacuum.
+        case vacuumOff:
+          if (debug) {
+            Serial.println("*****DO SUCTION NO*****");
+          }
+          sendInt(ACK); // Send an Acknowledge
+          mainCommand = recieveCommand;
+          break;
+
+
+
+        //-------------------------------------------------------------------------
+        //Changing velocity command receved
+        case changeVelocity:
+          if (debug) {
+            Serial.println("***** CANGE VELOCETY  *****");
+          }
+          sendInt(ACK); // Send an Acknowledge
+
+          // Uppdate the step speed
+          stepSpeed = Serial.parseInt();
+
+          if (debug) {
+            Serial.print("Z velocety: ");
+            Serial.println(stepSpeed);
+          }
+          break;
 
         //-------------------------------------------------------------------------
         //Set the command for calibrating the robot.
         case changeAcceleration:
           if (debug) {
-            Serial.println("*****CHANGE VELOCITY RECOGNIZED*****");
+            Serial.println("*****CHANGE ACCELERATION RECOGNIZED*****");
           }
           sendInt(ACK); // Send an Acknowledge
+          stepSpeed = Serial.parseInt();
           mainCommand = recieveCommand;
           break;
         //-----------------
@@ -117,6 +148,35 @@ void receiveSerialEvent() {
           sendInt(ACK); // Send an Acknowledge
           sendInt(inState);
           break;
+
+
+        case calibParam:
+          if (debug) {
+            Serial.println("CalibParam recognized        --");
+          }
+          inState = parameter;                //Set the response state to "Parameters"
+          //Add the values
+          response[cnt++] =  maxPos.zLeft;
+          response[cnt++] =  maxPos.zRight;
+
+          for (int i = 0; i < trayReg.nrOfTrays; i++) {
+            Tray tray = trayReg.trayList[i];
+            Pos pos = tray.zPos;
+            // Stor the tray positions in the response
+            response[cnt++] = pos.zLeft;
+            response[cnt++] = pos.zRight;
+          }
+          sendIntegers(response, arrayLength);
+          // If debug print responce
+          if (debug) {
+            for (int i = 0; i < (2 + (trayReg.nrOfTrays * 2)); i++) {
+              Serial.print("Response: " );
+              Serial.println(response[i]);
+            }
+          }
+
+          break;
+
 
 
 
