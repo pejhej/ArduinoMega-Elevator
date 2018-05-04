@@ -213,7 +213,7 @@ int lastPrintStep;
 void setup() {
 
   // Start Serial communication
-  Serial.begin(19200);
+  Serial.begin(115200);
 
   if (debug > 0)
   {
@@ -284,11 +284,16 @@ void loop()
       if (debug) {
         Serial.println(F("Main: Idle"));
       }
-      updateStatusAndNotify(readyToRecieve);
-      turnOnBrakeDisableMotors();
+      
+      
       if (debug) {
         delay(1000);
       }
+
+
+      turnOnBrakeDisableMotors();
+      delay(5);
+      updateStatusAndNotify(readyToRecieve);
       break;
 
 
@@ -340,6 +345,7 @@ void loop()
           }
           break;
 
+        
         //Moving while the safety barrier is trigged
         /*Cases that occur while moving when safety is trigged:
           1. End-stop sensors can be triggered, direction has to be checked before moving then

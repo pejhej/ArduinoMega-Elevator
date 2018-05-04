@@ -121,14 +121,14 @@ void updateStatusAndNotify(byte state) {
     inState = state;
     sendInt(inState);
     //Counter for making sure the controller updates the ready to recieve status - send it multiple times
-    if(state == readyToRecieve)
-    {/*
+    /*if(state == readyToRecieve)
+    {
       for(int i=0; i<readyCounter; ++i)
       {
         sendInt(inState);
       }
-      */
-    }
+      
+    }*/
   }
 }
 

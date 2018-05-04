@@ -188,7 +188,7 @@ bool calibrationWithSafety()
           }
         }
         //Both endstops are activated, so bottom is found
-        if (!digitalRead(LEFT_BOTTOM_SWITCH) && !digitalRead(RIGHT_BOTTOM_SWITCH))
+        if (!digitalRead(LEFT_BOTTOM_SWITCH) || !digitalRead(RIGHT_BOTTOM_SWITCH))
         {
           currentPos.zLeft = 0;
           currentPos.zRight = 0;
@@ -253,7 +253,7 @@ bool calibrationWithSafety()
 
 
         // if left and right motor is at their top positions set variable to true
-        if (!digitalRead(LEFT_TOP_SWITCH) || !digitalRead(RIGHT_TOP_SWITCH))
+        if (!digitalRead(LEFT_TOP_SWITCH) && !digitalRead(RIGHT_TOP_SWITCH))
         {
 
           //Save the found variables
